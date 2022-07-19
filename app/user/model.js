@@ -9,8 +9,8 @@ let userSchema = Schema({
     full_name: {
         type: String,
         required: [true, 'Nama harus diisi!'],
-        maxlength: [255, 'Panjang nama harus antara 3 - 255 karakter.'],
-        minlength: [3, 'Panjang nama harus antara 3 - 255 karakter']
+        maxlength: [255, 'Panjang nama harus antara tidak lebih dari 255 karakter.'],
+        minlength: [3, 'Panjang nama harus minimal 3 karakter.']
     },
     customer_id: {
         type: Number

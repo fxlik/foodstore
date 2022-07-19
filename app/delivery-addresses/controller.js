@@ -57,6 +57,71 @@ async function update(req, res, next) {
     }
 }
 
+async function destroy(req, res, next) {
+    let policy = policyFor(req.user)
+    try {
+        let { id } = req.params
+        let address = await DeliveryAddress.findOne({_id : id})
+        let subjectAddress = subject({...address, user: address.user})
+        if (!policy.can('delete', subjectAddress)) {
+            return res.json({
+                error: 1,
+                message: 'Anda tidak mempunyai akses untuk menghapus alamat'
+            })
+        }
+
+        await DeliveryAddress.findOneAndDelete({_id: id})
+        return res.json({
+            status: 'success',
+            message: 'berhasil menghapus data.',
+            data: address
+        })
+    } catch (err) {
+        if (err && err.name === 'ValidationError') {
+            return res.json({
+                error: 1,
+                message: err.message,
+                fields: err.errors
+            })
+        }
+        next(err)
+    }
+}
+
+async function index(req, res, next) {
+    const policy = policyFor(req.user)
+    if (!policy.can('view', 'DeliveryAddress')) {
+        return res.json({
+            error: 1,
+            message: 'Anda tidak mempunyai akses untuk melihat halaman ini'
+        })
+    }
+
+    try {
+        let { limit = 10, skip = 0 } = req.query
+        const count = await DeliveryAddress.find({user: req.user._id}).countDocuments()
+        const deliveryAddresses = await DeliveryAddress
+                                    .find({user: req.user._id})
+                                    .limit(parseInt(limit))
+                                    .skip(parseInt(skip))
+                                    .sort('-createdAt')
+        
+        return res.json({
+            data: deliveryAddresses,
+            count: count
+        })
+    } catch (err) {
+        if (err && err.name === 'ValidationError') {
+            return res.json({
+                error: 1,
+                messasge: err.message,
+                fields: err.errors
+            })
+        }
+        next(err)
+    }
+}
+
 module.exports = {
-    store, update
+    store, update, destroy, index
 }
